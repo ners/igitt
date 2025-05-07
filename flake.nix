@@ -52,6 +52,7 @@
               })
             ];
           };
+          inherit (final.haskellPackages) igitt;
         })
       ];
     in
