@@ -1,0 +1,77 @@
+cabal-version:       3.0
+name:                igitt
+version:             0.1.0.0
+synopsis:            Git wrapper to work with numbered branches
+homepage:            https://github.com/ners/igitt/blob/master/README.md
+license:             Apache-2.0
+license-file:        LICENCE.md
+author:              ners
+maintainer:          ners@gmx.ch
+bug-reports:         https://github.com/ners/igitt/issues
+category:            Terminal
+build-type:          Simple
+extra-source-files:  CHANGELOG.md, README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/ners/igitt
+
+common common
+    default-language: GHC2021
+    ghc-options:
+        -Weverything
+        -Wno-unsafe
+        -Wno-all-missed-specialisations
+        -Wno-missing-export-lists
+        -Wno-missing-import-lists
+        -Wno-missing-kind-signatures
+        -Wno-missing-role-annotations
+        -Wno-missing-safe-haskell-mode
+    default-extensions:
+        ApplicativeDo
+        BlockArguments
+        DataKinds
+        DefaultSignatures
+        DeriveAnyClass
+        DeriveGeneric
+        DerivingStrategies
+        DerivingVia
+        ExplicitNamespaces
+        LambdaCase
+        NoFieldSelectors
+        NoImplicitPrelude
+        OverloadedLabels
+        OverloadedLists
+        OverloadedRecordDot
+        OverloadedStrings
+        PackageImports
+        RecordWildCards
+        RecursiveDo
+        StrictData
+        TypeFamilies
+        ViewPatterns
+
+executable igitt
+    import:         common
+    main-is:        Main.hs
+    hs-source-dirs: app
+    build-depends:
+        ansi-terminal,
+        base >= 4.16 && < 5,
+        extra,
+        monad-logger,
+        optparse-applicative,
+        regex-tdfa,
+        terminal-widgets,
+        text,
+        text-rope-zipper,
+        turtle,
+        unliftio,
+    other-modules:
+        Bump
+        Command
+        New
+        Params
+        Prelude
+        Push
+        WorkingBranch
