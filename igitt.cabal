@@ -59,14 +59,16 @@ executable igitt
         ansi-terminal,
         base >= 4.16 && < 5,
         extra,
+        lens,
         monad-logger,
         optparse-applicative,
+        prettyprinter,
         regex-tdfa,
+        terminal,
         terminal-widgets,
         text,
         text-rope-zipper,
         turtle,
-        unliftio,
     other-modules:
         Bump
         Command

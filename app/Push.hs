@@ -20,9 +20,6 @@ data AmendCommitMessage
 parseAmendCommitMessage :: Parser AmendCommitMessage
 parseAmendCommitMessage = NewCommitMessage <$> parseCommitMessage
 
-askCommitMessage :: Text -> IO Text
-askCommitMessage = multilineTextInput "Commit message:"
-
 {-
  - igitt push ->
  -     "I have made some fixes that I want to (re-)push to N and stay on N."
@@ -39,43 +36,42 @@ data DirtyAction m
     | NewCommit {commitMessage :: m Text}
 
 parseDirtyAction
-    :: forall m. (forall a. Parser a -> Parser (m a)) -> Parser (DirtyAction m)
+    :: forall m
+     . (forall a. Parser a -> Parser (m a))
+    -> Parser (DirtyAction m)
 parseDirtyAction f = do
     let parseAmend = do
-            flag'
-                ()
-                ( long "amend"
+            flag' () $
+                long "amend"
                     <> help "If the workspace is dirty, amend the changes to the previous commit"
-                )
             amendMessage <- f parseAmendCommitMessage
             pure Amend{..}
     let parseNewCommit = do
-            flag'
-                ()
-                ( long "commit"
+            flag' () $
+                long "commit"
                     <> help "If the workspace is dirty, create a new commit of the changes"
-                )
             commitMessage <- f parseCommitMessage
             pure NewCommit{..}
     parseAmend <|> parseNewCommit
 
 askDirtyAction :: Maybe (DirtyAction Maybe) -> IO (DirtyAction IO)
 askDirtyAction Nothing = do
-    let values =
-            [("Amend", 'A'), ("Amend with new message", 'M'), ("New commit", 'C')]
-                :: [(Text, Char)]
+    let values :: [(Text, Char)]
+        values = [("Amend", 'A'), ("Amend with new message", 'M'), ("New commit", 'C')]
     selected <- buttons "The workspace is dirty, choose your weapon:" values 0 id
     case selected of
         "Amend" -> pure Amend{amendMessage = pure KeepOldMessage}
         "Amend with new message" -> do
-            message <- askCommitMessage . Text.strip =<< run ["git", "log", "-1", "--format=%B"]
+            message <-
+                commitMessageInput . Text.strip =<< run ["git", "log", "-1", "--format=%B"]
             pure Amend{amendMessage = pure $ NewCommitMessage message}
         "New commit" -> do
-            message <- askCommitMessage ""
+            message <- commitMessageInput ""
             pure NewCommit{commitMessage = pure message}
         _ -> undefined
 askDirtyAction (Just Amend{..}) = pure Amend{amendMessage = maybe (pure KeepOldMessage) pure amendMessage}
-askDirtyAction (Just NewCommit{..}) = pure NewCommit{commitMessage = maybe (askCommitMessage "") pure commitMessage}
+askDirtyAction (Just NewCommit{..}) =
+    pure NewCommit{commitMessage = maybe (commitMessageInput "") pure commitMessage}
 
 newtype PushParams m = PushParams
     { dirtyAction :: m (DirtyAction m)

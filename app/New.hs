@@ -25,19 +25,14 @@ parseParams
     -> Parser (NewParams m)
 parseParams f = do
     branchName <-
-        f $
-            strArgument
-                ( metavar "BRANCH"
-                  <> help "The base name of the branch to create"
-                )
+        f . strArgument $
+            metavar "BRANCH" <> help "The base name of the branch to create"
     commitMessage <-
-        f $
-            strOption
-                ( long "message"
-                    <> short 'm'
-                    <> metavar "MESSAGE"
-                    <> help "The commit message for the initial commit"
-                )
+        f . strOption $
+            long "message"
+                <> short 'm'
+                <> metavar "MESSAGE"
+                <> help "The commit message for the initial commit"
     pure NewParams{..}
 
 askParams :: NewParams Maybe -> NewParams IO
@@ -45,7 +40,7 @@ askParams NewParams{..} =
     NewParams
         { branchName = maybe (textInput "Branch name:" "") pure branchName
         , commitMessage =
-            maybe (multilineTextInput "Commit message:" "") pure commitMessage
+            maybe (commitMessageInput "") pure commitMessage
         }
 
 new :: Params Maybe -> NewParams Maybe -> IO ()
@@ -63,4 +58,10 @@ new (Params.defaults -> Params{..}) (askParams -> NewParams{..}) = do
         ]
     msg <- commitMessage
     run_
-        ["git", "commit", "--allow-empty", "--allow-empty-message", "--message", msg]
+        [ "git"
+        , "commit"
+        , "--allow-empty"
+        , "--allow-empty-message"
+        , "--message"
+        , msg
+        ]
