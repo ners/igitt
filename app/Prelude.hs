@@ -1,5 +1,6 @@
 module Prelude
     ( module Prelude
+    , module Control.Applicative
     , module Control.Monad.Extra
     , module Control.Monad.Logger
     , module Data.Functor
@@ -9,10 +10,12 @@ module Prelude
     , module Data.Text
     , module GHC.Generics
     , module Numeric.Natural
+    , module Options.Applicative
+    , module System.Exit
     )
 where
 
-import "base" Prelude hiding (unzip)
+import Control.Applicative ((<|>))
 import Control.Lens (Iso', iso, over, view)
 import Control.Monad.Extra (whenM)
 import Control.Monad.Logger (LogLevel)
@@ -28,15 +31,17 @@ import Data.Text.IO qualified as Text
 import Data.Text.Rope.Zipper qualified as RopeZipper
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
+import Options.Applicative (Parser)
 import Prettyprinter (annotate, pretty)
 import System.Console.ANSI
-import System.Exit (exitFailure)
+import System.Exit (ExitCode (..), exitFailure, exitWith)
 import System.IO (stderr)
 import System.Terminal (MonadColorPrinter (..), bold)
 import System.Terminal.Widgets.Buttons
 import System.Terminal.Widgets.Common (Widget (..), runWidgetIO)
 import System.Terminal.Widgets.TextInput
-import Turtle.Prelude (inproc, procs, strict)
+import Turtle qualified
+import "base" Prelude hiding (unzip)
 
 infixl 4 <$$>
 
@@ -73,15 +78,19 @@ printDebug t = do
     Text.hPutStrLn stderr t
     hSetSGR stderr [Reset]
 
-run :: NonEmpty Text -> IO Text
-run (x :| xs) = do
+run' :: NonEmpty Text -> IO (ExitCode, Text)
+run' (x :| xs) = do
     printInfo $ Text.unwords (x : xs)
-    Text.strip <$> strict (inproc x xs mempty)
+    Turtle.procStrict x xs Turtle.stdin
+
+run :: NonEmpty Text -> IO Text
+run xs =
+    run' xs >>= \case
+        (ExitSuccess, out) -> pure out
+        (code, _) -> exitWith code
 
 run_ :: NonEmpty Text -> IO ()
-run_ (x :| xs) = do
-    printInfo $ Text.unwords (x : xs)
-    procs x xs mempty
+run_ = void . run
 
 textInputOpts :: Bool -> Bool -> Text -> Text -> IO Text
 textInputOpts multiline required ((<> " ") -> prompt) (RopeZipper.fromText -> value) = do

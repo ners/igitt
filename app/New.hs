@@ -1,6 +1,13 @@
 module New where
 
 import Options.Applicative
+    ( help
+    , long
+    , metavar
+    , short
+    , strArgument
+    , strOption
+    )
 import Params (Params (..))
 import Params qualified
 import WorkingBranch

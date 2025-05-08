@@ -2,6 +2,13 @@ module Command where
 
 import New
 import Options.Applicative
+    ( CommandFields
+    , Mod
+    , command
+    , hsubparser
+    , info
+    , progDesc
+    )
 import Push
 import Prelude
 

@@ -3,7 +3,7 @@ module Params where
 import Control.Monad.Logger (LogLevel (..))
 import Data.Char (toLower)
 import Data.Maybe (fromMaybe)
-import Options.Applicative
+import Options.Applicative (flag', help, long, metavar, short, strOption)
 import System.Environment (lookupEnv)
 import Prelude
 

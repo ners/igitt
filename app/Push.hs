@@ -1,24 +1,9 @@
-{-# OPTIONS_GHC -Wno-partial-fields #-}
-
 module Push where
 
-import Data.Text qualified as Text
-import Options.Applicative
+import Dirty
 import Params
 import WorkingBranch
 import Prelude
-
-parseCommitMessage :: Parser Text
-parseCommitMessage =
-    strOption
-        (long "message" <> short 'm' <> metavar "MESSAGE" <> help "Commit message")
-
-data AmendCommitMessage
-    = KeepOldMessage
-    | NewCommitMessage Text
-
-parseAmendCommitMessage :: Parser AmendCommitMessage
-parseAmendCommitMessage = NewCommitMessage <$> parseCommitMessage
 
 {-
  - igitt push ->
@@ -31,48 +16,6 @@ parseAmendCommitMessage = NewCommitMessage <$> parseCommitMessage
  -          pushes to <name>-pr
  -     otherwise, fails, you should use igitt new
  -}
-data DirtyAction m
-    = Amend {amendMessage :: m AmendCommitMessage}
-    | NewCommit {commitMessage :: m Text}
-
-parseDirtyAction
-    :: forall m
-     . (forall a. Parser a -> Parser (m a))
-    -> Parser (DirtyAction m)
-parseDirtyAction f = do
-    let parseAmend = do
-            flag' () $
-                long "amend"
-                    <> help "If the workspace is dirty, amend the changes to the previous commit"
-            amendMessage <- f parseAmendCommitMessage
-            pure Amend{..}
-    let parseNewCommit = do
-            flag' () $
-                long "commit"
-                    <> help "If the workspace is dirty, create a new commit of the changes"
-            commitMessage <- f parseCommitMessage
-            pure NewCommit{..}
-    parseAmend <|> parseNewCommit
-
-askDirtyAction :: Maybe (DirtyAction Maybe) -> IO (DirtyAction IO)
-askDirtyAction Nothing = do
-    let values :: [(Text, Char)]
-        values = [("Amend", 'A'), ("Amend with new message", 'M'), ("New commit", 'C')]
-    selected <- buttons "The workspace is dirty, choose your weapon:" values 0 id
-    case selected of
-        "Amend" -> pure Amend{amendMessage = pure KeepOldMessage}
-        "Amend with new message" -> do
-            message <-
-                commitMessageInput . Text.strip =<< run ["git", "log", "-1", "--format=%B"]
-            pure Amend{amendMessage = pure $ NewCommitMessage message}
-        "New commit" -> do
-            message <- commitMessageInput ""
-            pure NewCommit{commitMessage = pure message}
-        _ -> undefined
-askDirtyAction (Just Amend{..}) = pure Amend{amendMessage = maybe (pure KeepOldMessage) pure amendMessage}
-askDirtyAction (Just NewCommit{..}) =
-    pure NewCommit{commitMessage = maybe (commitMessageInput "") pure commitMessage}
-
 newtype PushParams m = PushParams
     { dirtyAction :: m (DirtyAction m)
     }
@@ -91,14 +34,6 @@ askParams PushParams{..} =
         { dirtyAction = askDirtyAction dirtyAction
         }
 
--- | Returns True if the current workspace has unstaged changes to tracked files.
-isDirty :: IO Bool
-isDirty = do
-    numChanges <-
-        length . Text.lines
-            <$> run ["git", "status", "--untracked-files=no", "--short", "--porcelain=v1"]
-    pure $ numChanges > 0
-
 push :: Params Maybe -> PushParams Maybe -> IO WorkingBranch
 push (Params.defaults -> Params{..}) (askParams -> PushParams{..}) = do
     whenM isDirty $
@@ -116,7 +51,7 @@ push (Params.defaults -> Params{..}) (askParams -> PushParams{..}) = do
         Right currBranch -> do
             run_
                 ["git", "pull", "--rebase", runIdentity sourceRemote, runIdentity mainBranch]
-            run_ ["git", "push", "--force", runIdentity targetRemote, showBranch currBranch]
+            run_ ["git", "push", "--force", "--set-upstream", runIdentity targetRemote, showBranch currBranch]
             run_
                 [ "git"
                 , "push"
