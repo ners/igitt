@@ -3,9 +3,11 @@ module Prelude
     , module Control.Applicative
     , module Control.Monad.Extra
     , module Control.Monad.Logger
+    , module Data.Either.Extra
     , module Data.Functor
     , module Data.Functor.Identity
     , module Data.List.NonEmpty
+    , module Data.Maybe
     , module Data.String
     , module Data.Text
     , module GHC.Generics
@@ -19,11 +21,13 @@ import Control.Applicative ((<|>))
 import Control.Lens (Iso', iso, over, view)
 import Control.Monad.Extra (whenM)
 import Control.Monad.Logger (LogLevel)
+import Data.Either.Extra (eitherToMaybe)
 import Data.Functor
 import Data.Functor.Identity
 import Data.List qualified as List
 import Data.List.Extra ((!?))
 import Data.List.NonEmpty (NonEmpty (..))
+import Data.Maybe (mapMaybe)
 import Data.String
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -31,7 +35,22 @@ import Data.Text.IO qualified as Text
 import Data.Text.Rope.Zipper qualified as RopeZipper
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
-import Options.Applicative (Parser)
+import Options.Applicative
+    ( Mod
+    , OptionFields
+    , Parser
+    , completeWith
+    , flag'
+    , help
+    , long
+    , maybeReader
+    , metavar
+    , option
+    , short
+    , showDefault
+    , strArgument
+    , strOption
+    )
 import Prettyprinter (annotate, pretty)
 import System.Console.ANSI
 import System.Exit (ExitCode (..), exitFailure, exitWith)
@@ -40,6 +59,7 @@ import System.Terminal (MonadColorPrinter (..), bold)
 import System.Terminal.Widgets.Buttons
 import System.Terminal.Widgets.Common (Widget (..), runWidgetIO)
 import System.Terminal.Widgets.TextInput
+import Text.Read (readMaybe)
 import Turtle qualified
 import "base" Prelude hiding (unzip)
 
@@ -50,6 +70,9 @@ infixl 4 <$$>
 
 ishow :: (Show a, IsString s) => a -> s
 ishow = fromString . show
+
+catEithers :: [Either e a] -> [a]
+catEithers = mapMaybe eitherToMaybe
 
 fatalError :: Text -> IO a
 fatalError t = printError t >> exitFailure
@@ -157,8 +180,23 @@ buttons prompt values selected buttonText = do
             printError "Invalid selection"
             buttons prompt values selected buttonText
 
+parseYesNo :: String -> String -> Parser Bool
+parseYesNo yesLong yesHelp = flag' True (long yesLong <> help yesHelp) <|> flag' False (long noLong)
+  where
+    noLong = "no-" <> yesLong
+
 yesNoButtons :: Text -> Bool -> IO Bool
 yesNoButtons prompt defaultValue = do
     let values = [("Yes", 'Y'), ("No", 'N')] :: [(Text, Char)]
     let selected = if defaultValue then 0 else 1
     ("Yes" ==) <$> buttons prompt values selected id
+
+parseChoice
+    :: forall a. (Show a, Read a) => Mod OptionFields a -> [a] -> Parser a
+parseChoice m xs = option (maybeReader readMaybe) $ m <> showDefault <> completeWith options
+  where
+    options = show @a <$> xs
+
+parseEnum
+    :: (Bounded a, Enum a, Show a, Read a) => Mod OptionFields a -> Parser a
+parseEnum = flip parseChoice [minBound .. maxBound]

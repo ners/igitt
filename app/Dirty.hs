@@ -3,7 +3,6 @@
 module Dirty where
 
 import Data.Text qualified as Text
-import Options.Applicative (flag', help, long, metavar, short, strOption)
 import Prelude
 
 data AmendCommitMessage

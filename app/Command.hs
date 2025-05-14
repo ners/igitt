@@ -3,7 +3,6 @@ module Command where
 import New
 import Options.Applicative
     ( CommandFields
-    , Mod
     , command
     , hsubparser
     , info

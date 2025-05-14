@@ -1,5 +1,7 @@
 module WorkingBranch where
 
+import Data.List.NonEmpty (nonEmpty)
+import Data.List.NonEmpty.Extra (maximumOn1)
 import Data.Text qualified as Text
 import Text.Read (readMaybe)
 import Text.Regex.TDFA ((=~))
@@ -30,3 +32,10 @@ showPrBranch WorkingBranch{..} = Text.intercalate "-" [base, "pr"]
 
 getCurrBranch :: IO (Either Text WorkingBranch)
 getCurrBranch = parseBranch <$> run ["git", "branch", "--show-current"]
+
+findLatest :: Text -> IO (Maybe WorkingBranch)
+findLatest base = do
+    allBranches <- Text.strip <$$> Text.lines <$> run ["git", "branch", "--list"]
+    let parsedBranches = mapMaybe (eitherToMaybe . parseBranch) allBranches
+    let matchingBranches = filter ((== base) . (.base)) parsedBranches
+    pure $ maximumOn1 (.n) <$> nonEmpty matchingBranches

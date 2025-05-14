@@ -3,10 +3,9 @@ module Params where
 import Control.Monad.Logger (LogLevel (..))
 import Data.Char (toLower)
 import Data.Maybe (fromMaybe)
-import Options.Applicative (flag', help, long, metavar, short, strOption)
+import Data.Text qualified as Text
 import System.Environment (lookupEnv)
 import Prelude
-import Data.Text qualified as Text
 
 data Params m = Params
     { verbosity :: m LogLevel
@@ -79,10 +78,15 @@ getMainBranch sourceRemote = do
         ExitFailure _ -> do
             run_ ["git", "fetch", sourceRemote]
             extractMainBranch <$> run getRef
-    where
-        getRef = ["git", "symbolic-ref", "--short", "refs/remotes/" <> sourceRemote <> "/HEAD"]
-        extractMainBranch :: Text -> Text
-        extractMainBranch = (!! 1) . Text.split (== '/')
+  where
+    getRef =
+        [ "git"
+        , "symbolic-ref"
+        , "--short"
+        , "refs/remotes/" <> sourceRemote <> "/HEAD"
+        ]
+    extractMainBranch :: Text -> Text
+    extractMainBranch = (!! 1) . Text.split (== '/')
 
 defaults :: Params Maybe -> IO (Params Identity)
 defaults Params{..} = do
@@ -90,9 +94,10 @@ defaults Params{..} = do
     sourceRemote' <- maybe (pure "upstream") pure sourceRemote
     mainBranch' <- maybe (getMainBranch sourceRemote') pure mainBranch
     targetRemote' <- maybe (pure "origin") pure targetRemote
-    pure Params
-        { verbosity = pure verbosity'
-        , sourceRemote = pure sourceRemote'
-        , targetRemote = pure targetRemote'
-        , mainBranch = pure mainBranch'
-        }
+    pure
+        Params
+            { verbosity = pure verbosity'
+            , sourceRemote = pure sourceRemote'
+            , targetRemote = pure targetRemote'
+            , mainBranch = pure mainBranch'
+            }

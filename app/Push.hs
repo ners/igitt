@@ -51,7 +51,14 @@ push Params{..} (askParams -> PushParams{..}) = do
         Right currBranch -> do
             run_
                 ["git", "pull", "--rebase", runIdentity sourceRemote, runIdentity mainBranch]
-            run_ ["git", "push", "--force", "--set-upstream", runIdentity targetRemote, showBranch currBranch]
+            run_
+                [ "git"
+                , "push"
+                , "--force"
+                , "--set-upstream"
+                , runIdentity targetRemote
+                , showBranch currBranch
+                ]
             run_
                 [ "git"
                 , "push"

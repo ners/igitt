@@ -3,6 +3,7 @@ module Main where
 import Bump qualified
 import Command (Command (..))
 import Command qualified
+import Data.Tuple.Extra (firstM)
 import New qualified
 import Options.Applicative
     ( ParserInfo
@@ -17,7 +18,6 @@ import Params (Params, defaults)
 import Params qualified
 import Push qualified
 import Prelude
-import Data.Tuple.Extra (firstM)
 
 parserInfo :: ParserInfo (Params Maybe, Command Maybe)
 parserInfo =
@@ -31,7 +31,7 @@ parserInfo =
 
 main :: IO ()
 main = do
-    (params, command) <- firstM defaults =<< execParser parserInfo 
+    (params, command) <- firstM defaults =<< execParser parserInfo
     case command of
         New newParams -> New.new params newParams
         Push pushParams -> void $ Push.push params pushParams
