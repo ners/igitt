@@ -63,12 +63,12 @@ executable igitt
         monad-logger,
         optparse-applicative,
         prettyprinter,
+        process,
         regex-tdfa,
         terminal,
         terminal-widgets,
         text,
         text-rope-zipper,
-        turtle,
     other-modules:
         Bump
         Command

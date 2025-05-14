@@ -95,7 +95,7 @@ new params newParams@(askParams -> newParamsIO@NewParams{..}) = do
                 Continue -> run_ ["git", "checkout", showBranch wb]
                 IncrementAndNew -> createWorkingBranch params newParamsIO $ succBranch wb
                 ChooseDifferentName | isNothing newParams.branchName -> do
-                    unless (isNothing newParams.existingAction) $ printWarn errorMsg
+                    unless (isNothing newParams.existingAction) $ printError errorMsg
                     new params newParams
                 ChooseDifferentName -> fatalError errorMsg
 

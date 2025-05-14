@@ -3,6 +3,7 @@
 module Dirty where
 
 import Data.Text qualified as Text
+import Data.Tuple.Extra (fst3)
 import Prelude
 
 data AmendCommitMessage
@@ -61,4 +62,4 @@ askDirtyAction (Just NewCommit{..}) =
 -- | Returns True if the current workspace has unstaged changes to tracked files.
 isDirty :: IO Bool
 isDirty =
-    (ExitSuccess /=) . fst <$> run' ["git", "diff-index", "--quiet", "HEAD", "--"]
+    (ExitSuccess /=) . fst3 <$> run' ["git", "diff-index", "--quiet", "HEAD", "--"]

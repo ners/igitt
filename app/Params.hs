@@ -2,7 +2,6 @@ module Params where
 
 import Control.Monad.Logger (LogLevel (..))
 import Data.Char (toLower)
-import Data.Maybe (fromMaybe)
 import Data.Text qualified as Text
 import System.Environment (lookupEnv)
 import Prelude
@@ -72,7 +71,7 @@ parse f = do
 
 getMainBranch :: Text -> IO Text
 getMainBranch sourceRemote = do
-    (status, output) <- run' getRef
+    (status, output, _) <- run' getRef
     case status of
         ExitSuccess -> pure $ extractMainBranch output
         ExitFailure _ -> do
@@ -86,7 +85,7 @@ getMainBranch sourceRemote = do
         , "refs/remotes/" <> sourceRemote <> "/HEAD"
         ]
     extractMainBranch :: Text -> Text
-    extractMainBranch = (!! 1) . Text.split (== '/')
+    extractMainBranch = (!! 1) . Text.split (== '/') . Text.strip
 
 defaults :: Params Maybe -> IO (Params Identity)
 defaults Params{..} = do

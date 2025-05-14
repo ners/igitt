@@ -27,7 +27,7 @@ import Data.Functor.Identity
 import Data.List qualified as List
 import Data.List.Extra ((!?))
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Maybe (mapMaybe)
+import Data.Maybe (fromMaybe, mapMaybe)
 import Data.String
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -55,12 +55,12 @@ import Prettyprinter (annotate, pretty)
 import System.Console.ANSI
 import System.Exit (ExitCode (..), exitFailure, exitWith)
 import System.IO (stderr)
+import System.Process qualified as Process
 import System.Terminal (MonadColorPrinter (..), bold)
 import System.Terminal.Widgets.Buttons
 import System.Terminal.Widgets.Common (Widget (..), runWidgetIO)
 import System.Terminal.Widgets.TextInput
 import Text.Read (readMaybe)
-import Turtle qualified
 import "base" Prelude hiding (unzip)
 
 infixl 4 <$$>
@@ -101,16 +101,18 @@ printDebug t = do
     Text.hPutStrLn stderr t
     hSetSGR stderr [Reset]
 
-run' :: NonEmpty Text -> IO (ExitCode, Text)
+run' :: NonEmpty Text -> IO (ExitCode, Text, Text)
 run' (x :| xs) = do
     printInfo $ Text.unwords (x : xs)
-    Turtle.procStrict x xs Turtle.stdin
+    (exitCode, out, err) <-
+        Process.readProcessWithExitCode (Text.unpack x) (Text.unpack <$> xs) ""
+    pure (exitCode, fromString out, fromString err)
 
 run :: NonEmpty Text -> IO Text
 run xs =
     run' xs >>= \case
-        (ExitSuccess, out) -> pure out
-        (code, _) -> exitWith code
+        (ExitSuccess, out, _) -> pure out
+        (code, _, _) -> exitWith code
 
 run_ :: NonEmpty Text -> IO ()
 run_ = void . run
@@ -192,11 +194,20 @@ yesNoButtons prompt defaultValue = do
     ("Yes" ==) <$> buttons prompt values selected id
 
 parseChoice
-    :: forall a. (Show a, Read a) => Mod OptionFields a -> [a] -> Parser a
+    :: forall a
+     . (Show a, Read a)
+    => Mod OptionFields a
+    -> [a]
+    -> Parser a
 parseChoice m xs = option (maybeReader readMaybe) $ m <> showDefault <> completeWith options
   where
     options = show @a <$> xs
 
 parseEnum
-    :: (Bounded a, Enum a, Show a, Read a) => Mod OptionFields a -> Parser a
+    :: (Bounded a, Enum a, Show a, Read a)
+    => Mod OptionFields a
+    -> Parser a
 parseEnum = flip parseChoice [minBound .. maxBound]
+
+stripPrefix :: Text -> Text -> Text
+stripPrefix prefix t = fromMaybe t $ Text.stripPrefix prefix t

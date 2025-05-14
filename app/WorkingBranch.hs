@@ -35,7 +35,13 @@ getCurrBranch = parseBranch <$> run ["git", "branch", "--show-current"]
 
 findLatest :: Text -> IO (Maybe WorkingBranch)
 findLatest base = do
-    allBranches <- Text.strip <$$> Text.lines <$> run ["git", "branch", "--list"]
+    allBranches <-
+        stripPrefix "refs/heads/"
+            . (!! 1)
+            . Text.split (== ' ')
+            . Text.strip
+            <$$> Text.lines
+            <$> run ["git", "show-ref", "--branches"]
     let parsedBranches = mapMaybe (eitherToMaybe . parseBranch) allBranches
     let matchingBranches = filter ((== base) . (.base)) parsedBranches
     pure $ maximumOn1 (.n) <$> nonEmpty matchingBranches
