@@ -34,8 +34,8 @@ askParams PushParams{..} =
         { dirtyAction = askDirtyAction dirtyAction
         }
 
-push :: Params Maybe -> PushParams Maybe -> IO WorkingBranch
-push (Params.defaults -> Params{..}) (askParams -> PushParams{..}) = do
+push :: Params Identity -> PushParams Maybe -> IO WorkingBranch
+push Params{..} (askParams -> PushParams{..}) = do
     whenM isDirty $
         dirtyAction >>= \case
             Amend{..} -> do

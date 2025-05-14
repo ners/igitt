@@ -13,10 +13,11 @@ import Options.Applicative
     , optional
     , progDesc
     )
-import Params (Params)
+import Params (Params, defaults)
 import Params qualified
 import Push qualified
 import Prelude
+import Data.Tuple.Extra (firstM)
 
 parserInfo :: ParserInfo (Params Maybe, Command Maybe)
 parserInfo =
@@ -30,7 +31,7 @@ parserInfo =
 
 main :: IO ()
 main = do
-    (params, command) <- execParser parserInfo
+    (params, command) <- firstM defaults =<< execParser parserInfo 
     case command of
         New newParams -> New.new params newParams
         Push pushParams -> void $ Push.push params pushParams

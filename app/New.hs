@@ -9,7 +9,6 @@ import Options.Applicative
     , strOption
     )
 import Params (Params (..))
-import Params qualified
 import WorkingBranch
 import Prelude
 
@@ -50,8 +49,8 @@ askParams NewParams{..} =
             maybe (commitMessageInput "") pure commitMessage
         }
 
-new :: Params Maybe -> NewParams Maybe -> IO ()
-new (Params.defaults -> Params{..}) (askParams -> NewParams{..}) = do
+new :: Params Identity -> NewParams Maybe -> IO ()
+new Params{..} (askParams -> NewParams{..}) = do
     -- TODO: check if <branchName>-<N> exists for any N
     base <- branchName
     let wb = WorkingBranch{base, n = 1}

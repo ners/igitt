@@ -6,6 +6,7 @@ import Data.Maybe (fromMaybe)
 import Options.Applicative (flag', help, long, metavar, short, strOption)
 import System.Environment (lookupEnv)
 import Prelude
+import Data.Text qualified as Text
 
 data Params m = Params
     { verbosity :: m LogLevel
@@ -70,11 +71,28 @@ parse f = do
                 )
     pure Params{..}
 
-defaults :: Params Maybe -> Params Identity
-defaults Params{..} =
-    Params
-        { verbosity = maybe (pure LevelWarn) pure verbosity
-        , sourceRemote = maybe (pure "upstream") pure sourceRemote
-        , targetRemote = maybe (pure "origin") pure targetRemote
-        , mainBranch = maybe (pure "main") pure mainBranch
+getMainBranch :: Text -> IO Text
+getMainBranch sourceRemote = do
+    (status, output) <- run' getRef
+    case status of
+        ExitSuccess -> pure $ extractMainBranch output
+        ExitFailure _ -> do
+            run_ ["git", "fetch", sourceRemote]
+            extractMainBranch <$> run getRef
+    where
+        getRef = ["git", "symbolic-ref", "--short", "refs/remotes/" <> sourceRemote <> "/HEAD"]
+        extractMainBranch :: Text -> Text
+        extractMainBranch = (!! 1) . Text.split (== '/')
+
+defaults :: Params Maybe -> IO (Params Identity)
+defaults Params{..} = do
+    verbosity' <- maybe (pure LevelWarn) pure verbosity
+    sourceRemote' <- maybe (pure "upstream") pure sourceRemote
+    mainBranch' <- maybe (getMainBranch sourceRemote') pure mainBranch
+    targetRemote' <- maybe (pure "origin") pure targetRemote
+    pure Params
+        { verbosity = pure verbosity'
+        , sourceRemote = pure sourceRemote'
+        , targetRemote = pure targetRemote'
+        , mainBranch = pure mainBranch'
         }

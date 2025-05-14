@@ -13,7 +13,7 @@ import Prelude
  -          creates new <name>-<N+1>
  -     otherwise, fails, you should use igitt new
  -}
-bump :: Params Maybe -> PushParams Maybe -> IO WorkingBranch
+bump :: Params Identity -> PushParams Maybe -> IO WorkingBranch
 bump params pushParams = do
     currBranch <- push params pushParams
     let nextBranch = succBranch currBranch
