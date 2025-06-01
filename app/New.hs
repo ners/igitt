@@ -5,6 +5,7 @@ import Data.Maybe (isNothing)
 import Params (Params (..))
 import WorkingBranch
 import Prelude
+import Data.Text qualified as Text
 
 {-
  - igitt new <name>
@@ -107,7 +108,7 @@ createWorkingBranch Params{..} NewParams{commitMessage} wb = do
         , "checkout"
         , "-b"
         , showBranch wb
-        , runIdentity sourceRemote <> "/" <> runIdentity mainBranch
+        , remoteBranch (runIdentity sourceRemote) (runIdentity mainBranch)
         ]
     msg <- commitMessage
     run_
@@ -118,3 +119,13 @@ createWorkingBranch Params{..} NewParams{commitMessage} wb = do
         , "--message"
         , msg
         ]
+    run_
+        [ "git"
+        , "push"
+        , "--set-upstream"
+        , runIdentity targetRemote
+        , showBranch wb
+        ]
+    where
+        remoteBranch :: Text -> Text -> Text
+        remoteBranch x y = Text.intercalate "/" [x, y]
