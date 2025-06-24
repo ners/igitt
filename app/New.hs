@@ -2,10 +2,10 @@ module New where
 
 import Control.Monad (unless)
 import Data.Maybe (isNothing)
+import Data.Text qualified as Text
 import Params (Params (..))
 import WorkingBranch
 import Prelude
-import Data.Text qualified as Text
 
 {-
  - igitt new <name>
@@ -92,7 +92,7 @@ new params newParams@(askParams -> newParamsIO@NewParams{..}) = do
         Just wb -> do
             let errorMsg = "Branch already exists: " <> showBranch wb
             existingAction >>= \case
-                IncrementAndContinue -> run_ ["git", "checkout", "-b", showBranch $ succBranch wb, showBranch wb]
+                IncrementAndContinue -> switchToNextWorkingBranch wb
                 Continue -> run_ ["git", "checkout", showBranch wb]
                 IncrementAndNew -> createWorkingBranch params newParamsIO $ succBranch wb
                 ChooseDifferentName | isNothing newParams.branchName -> do
@@ -126,6 +126,6 @@ createWorkingBranch Params{..} NewParams{commitMessage} wb = do
         , runIdentity targetRemote
         , showBranch wb
         ]
-    where
-        remoteBranch :: Text -> Text -> Text
-        remoteBranch x y = Text.intercalate "/" [x, y]
+  where
+    remoteBranch :: Text -> Text -> Text
+    remoteBranch x y = Text.intercalate "/" [x, y]

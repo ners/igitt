@@ -30,8 +30,20 @@ showBranch WorkingBranch{..} = Text.intercalate "-" [base, ishow n]
 showPrBranch :: WorkingBranch -> Text
 showPrBranch WorkingBranch{..} = Text.intercalate "-" [base, "pr"]
 
-getCurrBranch :: IO (Either Text WorkingBranch)
-getCurrBranch = parseBranch <$> run ["git", "branch", "--show-current"]
+getCurrBranch :: IO Text
+getCurrBranch = run ["git", "branch", "--show-current"]
+
+getCurrWorkingBranch :: IO WorkingBranch
+getCurrWorkingBranch =
+    either (\t -> fatalError $ "Expected working branch, got: " <> t) pure
+        . parseBranch
+        =<< getCurrBranch
+
+switchToNextWorkingBranch :: WorkingBranch -> IO ()
+switchToNextWorkingBranch currBranch =
+    run_ ["git", "checkout", "-b", showBranch nextBranch, showBranch currBranch]
+  where
+    nextBranch = succBranch currBranch
 
 findLatest :: Text -> IO (Maybe WorkingBranch)
 findLatest base = do

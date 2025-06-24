@@ -47,24 +47,22 @@ push Params{..} (askParams -> PushParams{..}) = do
             NewCommit{..} -> do
                 msg <- commitMessage
                 run_ ["git", "commit", "--all", "--message", msg]
-    getCurrBranch >>= \case
-        Right currBranch -> do
-            run_
-                ["git", "pull", "--rebase", runIdentity sourceRemote, runIdentity mainBranch]
-            run_
-                [ "git"
-                , "push"
-                , "--force"
-                , "--set-upstream"
-                , runIdentity targetRemote
-                , showBranch currBranch
-                ]
-            run_
-                [ "git"
-                , "push"
-                , "--force"
-                , runIdentity targetRemote
-                , showBranch currBranch <> ":" <> showPrBranch currBranch
-                ]
-            pure currBranch
-        Left branchName -> fatalError $ "Expected working branch, got: " <> branchName
+    currBranch <- getCurrWorkingBranch
+    run_
+        ["git", "pull", "--rebase", runIdentity sourceRemote, runIdentity mainBranch]
+    run_
+        [ "git"
+        , "push"
+        , "--force"
+        , "--set-upstream"
+        , runIdentity targetRemote
+        , showBranch currBranch
+        ]
+    run_
+        [ "git"
+        , "push"
+        , "--force"
+        , runIdentity targetRemote
+        , showBranch currBranch <> ":" <> showPrBranch currBranch
+        ]
+    pure currBranch

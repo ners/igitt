@@ -1,6 +1,6 @@
 cabal-version:       3.0
 name:                igitt
-version:             0.1.0.0
+version:             0.2.0.0
 synopsis:            Git wrapper to work with numbered branches
 homepage:            https://github.com/ners/igitt/blob/master/README.md
 license:             Apache-2.0
