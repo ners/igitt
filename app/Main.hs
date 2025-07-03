@@ -12,12 +12,14 @@ import Options.Applicative
     , helper
     , info
     , optional
-    , progDesc
+    , progDesc, simpleVersioner
     )
 import Params (Params, defaults)
 import Params qualified
 import Push qualified
 import Prelude
+import Data.Version (showVersion)
+import Paths_igitt qualified
 
 parserInfo :: ParserInfo (Params Maybe, Command Maybe)
 parserInfo =
@@ -25,6 +27,9 @@ parserInfo =
         ( helper <*> do
             params <- Params.parse optional
             command <- Command.parse optional
+
+
+            simpleVersioner $ "igitt " <> showVersion Paths_igitt.version
             pure (params, command)
         )
         (fullDesc <> progDesc "igitt: an icky git tool")
