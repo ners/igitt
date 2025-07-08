@@ -1,6 +1,6 @@
 cabal-version:       3.0
 name:                igitt
-version:             0.2.1.0
+version:             0.2.2.0
 synopsis:            Git wrapper to work with numbered branches
 homepage:            https://github.com/ners/igitt/blob/master/README.md
 license:             Apache-2.0
@@ -59,13 +59,10 @@ executable igitt
         ansi-terminal,
         base >= 4.16 && < 5,
         extra,
-        lens,
         monad-logger,
         optparse-applicative,
-        prettyprinter,
         process,
         regex-tdfa,
-        terminal,
         terminal-widgets,
         text,
         text-rope-zipper,

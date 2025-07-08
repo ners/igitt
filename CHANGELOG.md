@@ -1,5 +1,9 @@
 # Revision history for igitt
 
+## 0.2.2.0 -- 2025-07-08
+
+* Commit message input asks for a single-line input instead of multiline
+
 ## 0.2.1.0  -- 2025-07-03
 
 * Add --version argument.
