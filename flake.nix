@@ -28,18 +28,20 @@
         fileset = fileFilter (file: any file.hasExt [ "cabal" "hs" "md" ]) root;
       };
       ghcsFor = pkgs: with lib; foldlAttrs
-        (acc: name: hp:
+        (acc: name: hp':
           let
-            version = getVersion hp.ghc;
+            hp = tryEval hp';
+            version = getVersion hp.value.ghc;
             majorMinor = versions.majorMinor version;
             ghcName = "ghc${replaceStrings ["."] [""] majorMinor}";
           in
-          if hp ? ghc && ! acc ? ${ghcName} && versionAtLeast version "9.4" && versionOlder version "9.12"
-          then acc // { ${ghcName} = hp; }
+          if hp.value ? ghc && ! acc ? ${ghcName} && versionAtLeast version "9.4" && versionOlder version "9.12"
+          then acc // { ${ghcName} = hp.value; }
           else acc
         )
         { }
         pkgs.haskell.packages;
+
       hpsFor = pkgs: { default = pkgs.haskellPackages; } // ghcsFor pkgs;
       overlay = lib.composeManyExtensions [
         inputs.terminal-widgets.overlays.default

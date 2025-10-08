@@ -125,7 +125,7 @@ multilineTextInput :: Text -> Text -> IO Text
 multilineTextInput = textInputOpts True False
 
 commitMessageInput :: Text -> IO Text
-commitMessageInput = textInput "Commit message: "
+commitMessageInput = textInput "Commit message:"
 
 buttons :: (Eq a, Show a) => Text -> [(a, Char)] -> Int -> (a -> Text) -> IO a
 buttons prompt values selected buttonText = do
