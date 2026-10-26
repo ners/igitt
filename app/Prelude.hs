@@ -53,9 +53,9 @@ import System.Console.ANSI
 import System.Exit (ExitCode (..), exitFailure, exitWith)
 import System.IO (stderr)
 import System.Process qualified as Process
-import System.Terminal.Widgets.Buttons
-import System.Terminal.Widgets.Common (runWidgetIO)
-import System.Terminal.Widgets.TextInput
+import System.Terminal.Widget (runWidgetIO)
+import System.Terminal.Widget.Buttons
+import System.Terminal.Widget.TextInput
 import Text.Read (readMaybe)
 import "base" Prelude hiding (unzip)
 
